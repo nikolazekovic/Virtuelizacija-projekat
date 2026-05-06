@@ -27,7 +27,7 @@ namespace Client
                 };
 
                 var startAck = motorProxy.StartSession(meta);
-                Console.WriteLine("StartSession: " + startAck.Status);
+                Console.WriteLine("StartSession: " + startAck.Status + " - " + startAck.Message);
 
                 var sample = new MotorSample
                 {
@@ -41,10 +41,10 @@ namespace Client
                 };
 
                 var pushAck = motorProxy.PushSample(sample);
-                Console.WriteLine("PushSample: " + pushAck.Status);
+                Console.WriteLine("PushSample: " + pushAck.Status + " - " + pushAck.Message);
 
                 var endAck = motorProxy.EndSession();
-                Console.WriteLine("EndSession: " + endAck.Status);
+                Console.WriteLine("EndSession: " + endAck.Status + " - " + endAck.Message);
             }
             catch (FaultException<CustomException> ex)
             {
