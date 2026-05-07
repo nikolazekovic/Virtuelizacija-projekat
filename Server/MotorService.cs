@@ -1,15 +1,19 @@
 using Common;
 using System;
+using System.Configuration;
 using System.ServiceModel;
 
 namespace Server
 {
     [ServiceBehavior(InstanceContextMode = InstanceContextMode.Single, ConcurrencyMode = ConcurrencyMode.Single)]
-    public class MotorService : IMotorService
+    public class MotorService : IMotorService, IDisposable
     {
+        private readonly string storageRoot = ConfigurationManager.AppSettings["motorStoragePath"] ?? "MotorStorage";
         private bool sessionStarted;
         private int sampleCount;
         private string currentSessionId;
+        private MotorSessionWriter sessionWriter;
+        private bool disposed;
 
         public Ack StartSession(StartSessionMeta meta)
         {
@@ -23,9 +27,19 @@ namespace Server
                 return new Ack { Success = false, Message = error, Status = "NACK" };
             }
 
-            sessionStarted = true;
-            sampleCount = 0;
             currentSessionId = string.IsNullOrWhiteSpace(meta.SessionId) ? Guid.NewGuid().ToString("N") : meta.SessionId;
+            sampleCount = 0;
+
+            try
+            {
+                sessionWriter = new MotorSessionWriter(storageRoot, currentSessionId);
+                sessionStarted = true;
+            }
+            catch (Exception ex)
+            {
+                ReleaseSessionResources();
+                return new Ack { Success = false, Message = "Unable to open session resources: " + ex.Message, Status = "NACK" };
+            }
 
             return new Ack
             {
@@ -42,12 +56,26 @@ namespace Server
                 return new Ack { Success = false, Message = "Session not started", Status = "NACK" };
             }
 
+            if (sessionWriter == null)
+            {
+                return new Ack { Success = false, Message = "Session writer is not available", Status = "NACK" };
+            }
+
             if (!ValidateMotorSample(sample, out string error))
             {
                 return new Ack { Success = false, Message = error, Status = "IN_PROGRESS" };
             }
 
-            sampleCount++;
+            try
+            {
+                sessionWriter.WriteSample(sample);
+                sampleCount++;
+            }
+            catch (Exception ex)
+            {
+                ReleaseSessionResources();
+                return new Ack { Success = false, Message = "Write error: " + ex.Message, Status = "NACK" };
+            }
 
             return new Ack
             {
@@ -64,16 +92,50 @@ namespace Server
                 return new Ack { Success = false, Message = "No active session", Status = "NACK" };
             }
 
-            sessionStarted = false;
             string finishedSessionId = currentSessionId;
-            currentSessionId = null;
+            int finishedSampleCount = sampleCount;
+            ReleaseSessionResources();
 
             return new Ack
             {
                 Success = true,
-                Message = "Session completed. SessionId: " + finishedSessionId + ". Samples: " + sampleCount,
+                Message = "Session completed. SessionId: " + finishedSessionId + ". Samples: " + finishedSampleCount,
                 Status = "COMPLETED"
             };
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposed)
+            {
+                return;
+            }
+
+            if (disposing)
+            {
+                ReleaseSessionResources();
+            }
+
+            disposed = true;
+        }
+
+        private void ReleaseSessionResources()
+        {
+            if (sessionWriter != null)
+            {
+                sessionWriter.Dispose();
+                sessionWriter = null;
+            }
+
+            sessionStarted = false;
+            sampleCount = 0;
+            currentSessionId = null;
         }
 
         private static bool ValidateStartSessionMeta(StartSessionMeta meta, out string error)

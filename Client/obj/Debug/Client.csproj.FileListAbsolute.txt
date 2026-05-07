@@ -1,0 +1,10 @@
+C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\bin\Debug\Client.exe.config
+C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\bin\Debug\Client.exe
+C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\bin\Debug\Client.pdb
+C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\bin\Debug\Common.dll
+C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\bin\Debug\Common.pdb
+C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\obj\Debug\Client.csproj.AssemblyReference.cache
+C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\obj\Debug\Client.csproj.CoreCompileInputs.cache
+C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\obj\Debug\Client.csproj.Up2Date
+C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\obj\Debug\Client.exe
+C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\obj\Debug\Client.pdb

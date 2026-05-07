@@ -7,11 +7,13 @@ namespace Server
     {
         static void Main(string[] args)
         {
+            MotorService service = null;
             ServiceHost motorHost = null;
 
             try
             {
-                motorHost = new ServiceHost(typeof(MotorService));
+                service = new MotorService();
+                motorHost = new ServiceHost(service);
                 motorHost.Open();
 
                 Console.WriteLine("PMSM Motor Monitoring Server");
@@ -21,7 +23,6 @@ namespace Server
                 Console.WriteLine("Press any key to stop the service");
 
                 Console.ReadKey();
-                motorHost.Close();
             }
             catch (Exception ex)
             {
@@ -31,11 +32,24 @@ namespace Server
             {
                 try
                 {
-                    motorHost?.Close();
+                    if (motorHost != null)
+                    {
+                        if (motorHost.State == CommunicationState.Faulted)
+                        {
+                            motorHost.Abort();
+                        }
+                        else
+                        {
+                            motorHost.Close();
+                        }
+                    }
                 }
                 catch
                 {
+                    motorHost?.Abort();
                 }
+
+                service?.Dispose();
             }
         }
     }
