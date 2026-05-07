@@ -46,7 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MotorClientProxy.cs" />
-    <Compile Include="MotorSampleReader.cs" />
+    <Compile Include="MotorCsvReader.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

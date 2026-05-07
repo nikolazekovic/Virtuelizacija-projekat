@@ -3,6 +3,7 @@ using System;
 using System.Configuration;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.ServiceModel;
 
 namespace Client
@@ -17,18 +18,19 @@ namespace Client
 
             try
             {
-                string inputPath = CreateDemoInputFile(simulateFailure);
+                string csvPath = ResolveCsvPath();
+                string rejectLogPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dataset", "rejects_client.csv");
 
                 Console.WriteLine("PMSM Motor Monitoring Client");
-                Console.WriteLine("Input file: " + inputPath);
+                Console.WriteLine("CSV path: " + csvPath);
 
                 if (simulateFailure)
                 {
-                    Console.WriteLine("Simulation mode: transfer interruption after first sample.");
+                    Console.WriteLine("Simulation mode: transfer interruption during write.");
                 }
 
                 using (var motorClient = new MotorClientProxy())
-                using (var reader = new MotorSampleReader(inputPath))
+                using (var reader = new MotorCsvReader(csvPath, rejectLogPath))
                 {
                     bool transferFailed = false;
 
@@ -52,6 +54,11 @@ namespace Client
 
                     while (reader.TryReadNext(out MotorSample sample))
                     {
+                        if (simulateFailure && reader.AcceptedCount > 1)
+                        {
+                            sample.ProfileId = 9999;
+                        }
+
                         var pushAck = motorClient.PushSample(sample);
                         Console.WriteLine("PushSample: " + pushAck.Status + " - " + pushAck.Message);
 
@@ -61,6 +68,10 @@ namespace Client
                             break;
                         }
                     }
+
+                    Console.WriteLine("Accepted lines: " + reader.AcceptedCount);
+                    Console.WriteLine("Rejected lines: " + reader.RejectedCount);
+                    Console.WriteLine("Reject log: " + rejectLogPath);
 
                     if (!transferFailed)
                     {
@@ -84,23 +95,66 @@ namespace Client
             }
         }
 
-        private static string CreateDemoInputFile(bool simulateFailure)
+        private static string ResolveCsvPath()
         {
-            string filePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "sample_input.csv");
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            string debugDatasetPath = Path.Combine(baseDirectory, "Dataset", "measures_v2.csv");
+            string projectDatasetPath = Path.Combine(baseDirectory, "..", "..", "..", "Client", "Dataset", "measures_v2.csv");
+
+            if (File.Exists(debugDatasetPath))
+            {
+                return debugDatasetPath;
+            }
+
+            if (File.Exists(projectDatasetPath))
+            {
+                return projectDatasetPath;
+            }
+
+            string debugDatasetDirectory = Path.Combine(baseDirectory, "Dataset");
+            string projectDatasetDirectory = Path.Combine(baseDirectory, "..", "..", "..", "Client", "Dataset");
+
+            if (Directory.Exists(debugDatasetDirectory))
+            {
+                string file = Directory.GetFiles(debugDatasetDirectory, "*.csv")
+                    .Where(f => !Path.GetFileName(f).StartsWith("rejects_", StringComparison.OrdinalIgnoreCase))
+                    .FirstOrDefault();
+
+                if (file != null)
+                {
+                    return file;
+                }
+            }
+
+            if (Directory.Exists(projectDatasetDirectory))
+            {
+                string file = Directory.GetFiles(projectDatasetDirectory, "*.csv")
+                    .Where(f => !Path.GetFileName(f).StartsWith("rejects_", StringComparison.OrdinalIgnoreCase))
+                    .FirstOrDefault();
+
+                if (file != null)
+                {
+                    return file;
+                }
+            }
+
+            return CreateDemoInputFile();
+        }
+
+        private static string CreateDemoInputFile()
+        {
+            string datasetDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Dataset");
+            Directory.CreateDirectory(datasetDirectory);
+
+            string filePath = Path.Combine(datasetDirectory, "sample_input.csv");
 
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Read))
             using (var writer = new StreamWriter(fileStream))
             {
+                writer.WriteLine("Timestamp,Iq,Id,Coolant,ProfileId,Ambient,Torque");
                 writer.WriteLine(CreateSampleLine(DateTime.UtcNow, 1.2, 0.8, 30.5, 1, 24.0, 12.5));
-
-                if (simulateFailure)
-                {
-                    writer.WriteLine(CreateSampleLine(DateTime.UtcNow.AddSeconds(1), 1.4, 0.9, 31.0, 9999, 24.1, 12.8));
-                }
-                else
-                {
-                    writer.WriteLine(CreateSampleLine(DateTime.UtcNow.AddSeconds(1), 1.4, 0.9, 31.0, 1, 24.1, 12.8));
-                }
+                writer.WriteLine("bad,line,for,reject,log");
+                writer.WriteLine(CreateSampleLine(DateTime.UtcNow.AddSeconds(1), 1.4, 0.9, 31.0, 1, 24.1, 12.8));
             }
 
             return filePath;
