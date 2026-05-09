@@ -32,17 +32,28 @@ namespace Server
         private double iqThreshold;
         private double idThreshold;
 
+        private double? previousCoolant;
+        private double tThreshold;
+        private double coolantSum;
+        private int coolantCount;
+        private double deviationPercent;
+
         public delegate void ElectricSpikeQHandler(string direction, double delta);
         public event ElectricSpikeQHandler OnElectricSpikeQ;
 
         public delegate void ElectricSpikeDHandler(string direction, double delta);
         public event ElectricSpikeDHandler OnElectricSpikeD;
 
+        public delegate void TemperatureSpikeHandler(string direction, double delta);
+        public event TemperatureSpikeHandler OnTemperatureSpike;
+
+        public delegate void OutOfBandWarningHandler(string direction, double coolant, double mean);
+        public event OutOfBandWarningHandler OnOutOfBandWarning;
+
         public Ack StartSession(StartSessionMeta meta)
         {
             if (sessionStarted)
             {
-                OnTransferStarted?.Invoke(currentSessionId, DateTime.UtcNow);
                 return new Ack { Success = false, Message = "Session already started", Status = "NACK" };
             }
 
@@ -58,10 +69,16 @@ namespace Server
             idThreshold = meta.IdThreshold;
             previousIq = null;
             previousId = null;
+            tThreshold = meta.TThreshold;
+            deviationPercent = meta.DeviationPercent;
+            previousCoolant = null;
+            coolantSum = 0;
+            coolantCount = 0;
             try
             {
                 sessionWriter = new MotorSessionWriter(storageRoot, currentSessionId);
                 sessionStarted = true;
+                OnTransferStarted?.Invoke(currentSessionId, DateTime.UtcNow);
             }
             catch (Exception ex)
             {
@@ -136,6 +153,35 @@ namespace Server
                 }
             }
             previousId = sample.Id;
+
+            // Analitika 2 - TemperatureSpike
+            if (previousCoolant.HasValue)
+            {
+                double deltaT = sample.Coolant - previousCoolant.Value;
+                if (Math.Abs(deltaT) > tThreshold)
+                {
+                    string direction = deltaT > 0 ? "iznad očekivanog" : "ispod očekivanog";
+                    OnTemperatureSpike?.Invoke(direction, deltaT);
+                }
+            }
+            previousCoolant = sample.Coolant;
+
+            // Running mean + OutOfBandWarning
+            coolantSum += sample.Coolant;
+            coolantCount++;
+            double coolantMean = coolantSum / coolantCount;
+
+            double lowerBound = coolantMean * (1.0 - deviationPercent / 100.0);
+            double upperBound = coolantMean * (1.0 + deviationPercent / 100.0);
+
+            if (sample.Coolant < lowerBound)
+            {
+                OnOutOfBandWarning?.Invoke("ispod očekivane vrednosti", sample.Coolant, coolantMean);
+            }
+            else if (sample.Coolant > upperBound)
+            {
+                OnOutOfBandWarning?.Invoke("iznad očekivane vrednosti", sample.Coolant, coolantMean);
+            }
 
             return new Ack
             {

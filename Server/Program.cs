@@ -33,6 +33,12 @@ namespace Server
                 service.OnElectricSpikeD += (direction, delta) => 
                     Console.WriteLine($"[ANALITIKA 1] Upozorenje: Struja Id je {direction}. Priraštaj: {delta}");
 
+                service.OnTemperatureSpike += (direction, delta) =>
+                    Console.WriteLine($"[ANALITIKA 2] Temperatura rashladne tečnosti je {direction}. Priraštaj: {delta}");
+
+                service.OnOutOfBandWarning += (direction, coolant, mean) =>
+                    Console.WriteLine($"[ANALITIKA 2] Odstupanje od proseka: {direction}. Trenutna vrednost: {coolant:F2}, Prosek: {mean:F2}");
+                
                 motorHost = new ServiceHost(service);
                 motorHost.Open();
             }
