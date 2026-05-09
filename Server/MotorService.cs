@@ -27,6 +27,17 @@ namespace Server
         public delegate void WarningRaisedHandler(string message);
         public event WarningRaisedHandler OnWarningRaised;
 
+        private double? previousIq;
+        private double? previousId;
+        private double iqThreshold;
+        private double idThreshold;
+
+        public delegate void ElectricSpikeQHandler(string direction, double delta);
+        public event ElectricSpikeQHandler OnElectricSpikeQ;
+
+        public delegate void ElectricSpikeDHandler(string direction, double delta);
+        public event ElectricSpikeDHandler OnElectricSpikeD;
+
         public Ack StartSession(StartSessionMeta meta)
         {
             if (sessionStarted)
@@ -43,6 +54,10 @@ namespace Server
             currentSessionId = string.IsNullOrWhiteSpace(meta.SessionId) ? Guid.NewGuid().ToString("N") : meta.SessionId;
             sampleCount = 0;
 
+            iqThreshold = meta.IqThreshold;
+            idThreshold = meta.IdThreshold;
+            previousIq = null;
+            previousId = null;
             try
             {
                 sessionWriter = new MotorSessionWriter(storageRoot, currentSessionId);
@@ -65,21 +80,17 @@ namespace Server
         public Ack PushSample(MotorSample sample)
         {
             if (!sessionStarted)
-            {
                 return new Ack { Success = false, Message = "Session not started", Status = "NACK" };
-            }
 
             if (sessionWriter == null)
-            {
                 return new Ack { Success = false, Message = "Session writer is not available", Status = "NACK" };
-            }
 
             if (!ValidateMotorSample(sample, out string error))
             {
-            try
-            {
-            if (sample != null)
-                sessionWriter.WriteReject(sample, error);
+                try
+                {
+                    if (sample != null)
+                        sessionWriter.WriteReject(sample, error);
                 }
                 catch (Exception ex)
                 {
@@ -94,14 +105,37 @@ namespace Server
             {
                 sessionWriter.WriteSample(sample);
                 sampleCount++;
+                Console.WriteLine("prenos u toku... (uzorak " + sampleCount + ")");
                 OnSampleReceived?.Invoke(sampleCount);
-                Console.WriteLine("Prenos je u toku... (uzorak " + sampleCount + ")");  
             }
             catch (Exception ex)
             {
                 ReleaseSessionResources();
                 return new Ack { Success = false, Message = "Write error: " + ex.Message, Status = "NACK" };
             }
+
+            // Analitika 1 - van try bloka, ne može srušiti sesiju
+            if (previousIq.HasValue)
+            {
+                double deltaIq = sample.Iq - previousIq.Value;
+                if (Math.Abs(deltaIq) > iqThreshold)
+                {
+                    string direction = deltaIq > 0 ? "iznad očekivanog" : "ispod očekivanog";
+                    OnElectricSpikeQ?.Invoke(direction, deltaIq);
+                }
+            }
+            previousIq = sample.Iq;
+
+            if (previousId.HasValue)
+            {
+                double deltaId = sample.Id - previousId.Value;
+                if (Math.Abs(deltaId) > idThreshold)
+                {
+                    string direction = deltaId > 0 ? "iznad očekivanog" : "ispod očekivanog";
+                    OnElectricSpikeD?.Invoke(direction, deltaId);
+                }
+            }
+            previousId = sample.Id;
 
             return new Ack
             {

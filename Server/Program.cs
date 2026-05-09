@@ -27,6 +27,11 @@ namespace Server
                 service.OnWarningRaised += (message) => 
                     Console.WriteLine($"[UPOZORENJE] {message}");
 
+                service.OnElectricSpikeQ += (direction, delta) => 
+                    Console.WriteLine($"[ANALITIKA 1] Upozorenje: Struja Iq je {direction}. Priraštaj: {delta}");
+                
+                service.OnElectricSpikeD += (direction, delta) => 
+                    Console.WriteLine($"[ANALITIKA 1] Upozorenje: Struja Id je {direction}. Priraštaj: {delta}");
 
                 motorHost = new ServiceHost(service);
                 motorHost.Open();
