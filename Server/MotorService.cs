@@ -81,6 +81,7 @@ namespace Server
             {
                 sessionWriter.WriteSample(sample);
                 sampleCount++;
+                Console.WriteLine("Prenos je u toku... (uzorak " + sampleCount + ")");  
             }
             catch (Exception ex)
             {
@@ -105,6 +106,7 @@ namespace Server
 
             string finishedSessionId = currentSessionId;
             int finishedSampleCount = sampleCount;
+            Console.WriteLine("Prenos je završen.");
             ReleaseSessionResources();
 
             return new Ack
