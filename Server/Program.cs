@@ -13,16 +13,23 @@ namespace Server
             try
             {
                 service = new MotorService();
+                
+                // Pretplata na događaje
+                service.OnTransferStarted += (sessionId, startTime) => 
+                    Console.WriteLine($"[DOGAĐAJ] Sesija započeta: {sessionId} u {startTime}");
+                
+                service.OnSampleReceived += (count) => 
+                    Console.WriteLine($"[DOGAĐAJ] Primljen uzorak broj: {count}");
+                
+                service.OnTransferCompleted += (sessionId, count) => 
+                    Console.WriteLine($"[DOGAĐAJ] Sesija završena: {sessionId}. Ukupno uzoraka: {count}");
+
+                service.OnWarningRaised += (message) => 
+                    Console.WriteLine($"[UPOZORENJE] {message}");
+
+
                 motorHost = new ServiceHost(service);
                 motorHost.Open();
-
-                Console.WriteLine("PMSM Motor Monitoring Server");
-                Console.WriteLine("Motor Service Status: RUNNING");
-                Console.WriteLine("Endpoint: net.tcp://localhost:4101/Motor");
-                Console.WriteLine("Protocol: NetTCP with Streaming");
-                Console.WriteLine("Press any key to stop the service");
-
-                Console.ReadKey();
             }
             catch (Exception ex)
             {
