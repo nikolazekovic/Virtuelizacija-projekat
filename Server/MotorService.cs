@@ -63,6 +63,17 @@ namespace Server
 
             if (!ValidateMotorSample(sample, out string error))
             {
+            try
+            {
+            if (sample != null)
+                sessionWriter.WriteReject(sample, error);
+                }
+                catch (Exception ex)
+                {
+                    ReleaseSessionResources();
+                    return new Ack { Success = false, Message = "Write reject error: " + ex.Message, Status = "NACK" };
+                }
+
                 return new Ack { Success = false, Message = error, Status = "IN_PROGRESS" };
             }
 
