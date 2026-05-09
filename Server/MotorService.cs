@@ -54,6 +54,7 @@ namespace Server
         {
             if (sessionStarted)
             {
+                OnTransferStarted?.Invoke(currentSessionId, DateTime.UtcNow);
                 return new Ack { Success = false, Message = "Session already started", Status = "NACK" };
             }
 
@@ -122,8 +123,8 @@ namespace Server
             {
                 sessionWriter.WriteSample(sample);
                 sampleCount++;
-                Console.WriteLine("prenos u toku... (uzorak " + sampleCount + ")");
                 OnSampleReceived?.Invoke(sampleCount);
+                Console.WriteLine("Prenos je u toku... (uzorak " + sampleCount + ")");  
             }
             catch (Exception ex)
             {
