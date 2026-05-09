@@ -15,10 +15,23 @@ namespace Server
         private MotorSessionWriter sessionWriter;
         private bool disposed;
 
+        public delegate void TransferStartedHandler(string sessionId, DateTime startTime);
+        public event TransferStartedHandler OnTransferStarted;
+
+        public delegate void SampleReceivedHandler(int sampleCount);
+        public event SampleReceivedHandler OnSampleReceived;
+
+        public delegate void TransferCompletedHandler(string sessionId, int totalSamples);
+        public event TransferCompletedHandler OnTransferCompleted;
+
+        public delegate void WarningRaisedHandler(string message);
+        public event WarningRaisedHandler OnWarningRaised;
+
         public Ack StartSession(StartSessionMeta meta)
         {
             if (sessionStarted)
             {
+                OnTransferStarted?.Invoke(currentSessionId, DateTime.UtcNow);
                 return new Ack { Success = false, Message = "Session already started", Status = "NACK" };
             }
 
@@ -81,6 +94,7 @@ namespace Server
             {
                 sessionWriter.WriteSample(sample);
                 sampleCount++;
+                OnSampleReceived?.Invoke(sampleCount);
                 Console.WriteLine("Prenos je u toku... (uzorak " + sampleCount + ")");  
             }
             catch (Exception ex)
@@ -107,6 +121,7 @@ namespace Server
             string finishedSessionId = currentSessionId;
             int finishedSampleCount = sampleCount;
             Console.WriteLine("Prenos je završen.");
+            OnTransferCompleted?.Invoke(finishedSessionId, finishedSampleCount);
             ReleaseSessionResources();
 
             return new Ack
