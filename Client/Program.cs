@@ -33,6 +33,8 @@ namespace Client
                 using (var reader = new MotorCsvReader(csvPath, rejectLogPath))
                 {
                     bool transferFailed = false;
+                    int maxSamples = 100;
+                    int sent = 0;
 
                     var meta = new StartSessionMeta
                     {
@@ -52,7 +54,7 @@ namespace Client
                         return;
                     }
 
-                    while (reader.TryReadNext(out MotorSample sample))
+                    while (sent < maxSamples && reader.TryReadNext(out MotorSample sample))
                     {
                         if (simulateFailure && reader.AcceptedCount > 1)
                         {
@@ -62,11 +64,13 @@ namespace Client
                         var pushAck = motorClient.PushSample(sample);
                         Console.WriteLine("PushSample: " + pushAck.Status + " - " + pushAck.Message);
 
-                        if (!pushAck.Success)
+                        if (!pushAck.Success && pushAck.Status == "NACK")
                         {
                             transferFailed = true;
                             break;
                         }
+
+                        sent++;
                     }
 
                     Console.WriteLine("Accepted lines: " + reader.AcceptedCount);
@@ -92,6 +96,11 @@ namespace Client
             {
                 Console.WriteLine("Client error: " + ex.Message);
                 Console.WriteLine("Resources are released through IDisposable and using blocks.");
+            }
+            finally
+            {
+                Console.WriteLine("Pritisni Enter za izlaz...");
+                Console.ReadLine();
             }
         }
 

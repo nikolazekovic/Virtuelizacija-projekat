@@ -41,6 +41,10 @@ namespace Server
                 
                 motorHost = new ServiceHost(service);
                 motorHost.Open();
+
+                Console.WriteLine("Server je pokrenut na net.tcp://localhost:4101/Motor");
+                Console.WriteLine("Pritisni Enter za zaustavljanje...");
+                Console.ReadLine();
             }
             catch (Exception ex)
             {
