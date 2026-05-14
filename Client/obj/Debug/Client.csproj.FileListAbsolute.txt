@@ -8,3 +8,25 @@ C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\obj\Debug\Client.cspr
 C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\obj\Debug\Client.csproj.Up2Date
 C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\obj\Debug\Client.exe
 C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Client\obj\Debug\Client.pdb
+C:\Users\Milija\Desktop\Fax\Virtueliacija - projekat\Virtuelizacija-projekat\Client\bin\Debug\Client.exe.config
+C:\Users\Milija\Desktop\Fax\Virtueliacija - projekat\Virtuelizacija-projekat\Client\bin\Debug\Client.exe
+C:\Users\Milija\Desktop\Fax\Virtueliacija - projekat\Virtuelizacija-projekat\Client\bin\Debug\Client.pdb
+C:\Users\Milija\Desktop\Fax\Virtueliacija - projekat\Virtuelizacija-projekat\Client\bin\Debug\Common.dll
+C:\Users\Milija\Desktop\Fax\Virtueliacija - projekat\Virtuelizacija-projekat\Client\bin\Debug\Common.pdb
+C:\Users\Milija\Desktop\Fax\Virtueliacija - projekat\Virtuelizacija-projekat\Client\obj\Debug\Client.csproj.AssemblyReference.cache
+C:\Users\Milija\Desktop\Fax\Virtueliacija - projekat\Virtuelizacija-projekat\Client\obj\Debug\Client.exe.config
+C:\Users\Milija\Desktop\Fax\Virtueliacija - projekat\Virtuelizacija-projekat\Client\obj\Debug\Client.csproj.CoreCompileInputs.cache
+C:\Users\Milija\Desktop\Fax\Virtueliacija - projekat\Virtuelizacija-projekat\Client\obj\Debug\Client.csproj.Up2Date
+C:\Users\Milija\Desktop\Fax\Virtueliacija - projekat\Virtuelizacija-projekat\Client\obj\Debug\Client.exe
+C:\Users\Milija\Desktop\Fax\Virtueliacija - projekat\Virtuelizacija-projekat\Client\obj\Debug\Client.pdb
+C:\Users\Milija\Desktop\Virtuelizacija-projekat\Client\bin\Debug\Client.exe.config
+C:\Users\Milija\Desktop\Virtuelizacija-projekat\Client\bin\Debug\Client.exe
+C:\Users\Milija\Desktop\Virtuelizacija-projekat\Client\bin\Debug\Client.pdb
+C:\Users\Milija\Desktop\Virtuelizacija-projekat\Client\bin\Debug\Common.dll
+C:\Users\Milija\Desktop\Virtuelizacija-projekat\Client\bin\Debug\Common.pdb
+C:\Users\Milija\Desktop\Virtuelizacija-projekat\Client\obj\Debug\Client.csproj.AssemblyReference.cache
+C:\Users\Milija\Desktop\Virtuelizacija-projekat\Client\obj\Debug\Client.exe.config
+C:\Users\Milija\Desktop\Virtuelizacija-projekat\Client\obj\Debug\Client.csproj.CoreCompileInputs.cache
+C:\Users\Milija\Desktop\Virtuelizacija-projekat\Client\obj\Debug\Client.csproj.Up2Date
+C:\Users\Milija\Desktop\Virtuelizacija-projekat\Client\obj\Debug\Client.exe
+C:\Users\Milija\Desktop\Virtuelizacija-projekat\Client\obj\Debug\Client.pdb

@@ -53,11 +53,6 @@ namespace Server
                 throw new ObjectDisposedException("MotorSessionWriter");
             }
 
-            if (sample.ProfileId == 9999)
-            {
-                throw new IOException("Simulated stream interruption during write.");
-            }
-
             writer.WriteLine(string.Join(",",
                 sample.Timestamp.ToString("O", CultureInfo.InvariantCulture),
                 sample.Iq.ToString(CultureInfo.InvariantCulture),

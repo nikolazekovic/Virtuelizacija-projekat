@@ -1,0 +1,69 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Users\\Milija\\Desktop\\Virtuelizacija-projekat\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{3E5772B4-19A3-4D93-BD97-DEA31A2F7447}|Client\\Client.csproj|c:\\users\\milija\\desktop\\virtuelizacija-projekat\\client\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3E5772B4-19A3-4D93-BD97-DEA31A2F7447}|Client\\Client.csproj|solutionrelative:client\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3E5772B4-19A3-4D93-BD97-DEA31A2F7447}|Client\\Client.csproj|C:\\Users\\Milija\\Desktop\\Virtuelizacija-projekat\\client\\motorcsvreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3E5772B4-19A3-4D93-BD97-DEA31A2F7447}|Client\\Client.csproj|solutionrelative:client\\motorcsvreader.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{3E5772B4-19A3-4D93-BD97-DEA31A2F7447}|Client\\Client.csproj|C:\\Users\\Milija\\Desktop\\Virtuelizacija-projekat\\client\\motorclientproxy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{3E5772B4-19A3-4D93-BD97-DEA31A2F7447}|Client\\Client.csproj|solutionrelative:client\\motorclientproxy.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 0,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Milija\\Desktop\\Virtuelizacija-projekat\\Client\\Program.cs",
+              "RelativeDocumentMoniker": "Client\\Program.cs",
+              "ToolTip": "C:\\Users\\Milija\\Desktop\\Virtuelizacija-projekat\\Client\\Program.cs",
+              "RelativeToolTip": "Client\\Program.cs",
+              "ViewState": "AgIAAJwAAAAAAAAAAAAswLQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-14T17:21:17.951Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "MotorCsvReader.cs",
+              "DocumentMoniker": "C:\\Users\\Milija\\Desktop\\Virtuelizacija-projekat\\Client\\MotorCsvReader.cs",
+              "RelativeDocumentMoniker": "Client\\MotorCsvReader.cs",
+              "ToolTip": "C:\\Users\\Milija\\Desktop\\Virtuelizacija-projekat\\Client\\MotorCsvReader.cs",
+              "RelativeToolTip": "Client\\MotorCsvReader.cs",
+              "ViewState": "AgIAAE0AAAAAAAAAAAAAAHQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-14T17:21:12.242Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "MotorClientProxy.cs",
+              "DocumentMoniker": "C:\\Users\\Milija\\Desktop\\Virtuelizacija-projekat\\Client\\MotorClientProxy.cs",
+              "RelativeDocumentMoniker": "Client\\MotorClientProxy.cs",
+              "ToolTip": "C:\\Users\\Milija\\Desktop\\Virtuelizacija-projekat\\Client\\MotorClientProxy.cs",
+              "RelativeToolTip": "Client\\MotorClientProxy.cs",
+              "ViewState": "AgIAAC8AAAAAAAAAAAAAAFYAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-14T17:21:01.522Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

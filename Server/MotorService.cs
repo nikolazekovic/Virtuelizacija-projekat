@@ -54,7 +54,6 @@ namespace Server
         {
             if (sessionStarted)
             {
-                OnTransferStarted?.Invoke(currentSessionId, DateTime.UtcNow);
                 return new Ack { Success = false, Message = "Session already started", Status = "NACK" };
             }
 
@@ -112,8 +111,7 @@ namespace Server
                 }
                 catch (Exception ex)
                 {
-                    ReleaseSessionResources();
-                    return new Ack { Success = false, Message = "Write reject error: " + ex.Message, Status = "NACK" };
+                    return new Ack { Success = false, Message = "Write reject error: " + ex.Message, Status = "IN_PROGRESS" };
                 }
 
                 return new Ack { Success = false, Message = error, Status = "IN_PROGRESS" };
@@ -168,9 +166,9 @@ namespace Server
             previousCoolant = sample.Coolant;
 
             // Running mean + OutOfBandWarning
+            double coolantMean = coolantCount > 0 ? coolantSum / coolantCount : sample.Coolant;
             coolantSum += sample.Coolant;
             coolantCount++;
-            double coolantMean = coolantSum / coolantCount;
 
             double lowerBound = coolantMean * (1.0 - deviationPercent / 100.0);
             double upperBound = coolantMean * (1.0 + deviationPercent / 100.0);
@@ -245,6 +243,11 @@ namespace Server
             sessionStarted = false;
             sampleCount = 0;
             currentSessionId = null;
+            previousIq = null;
+            previousId = null;
+            previousCoolant = null;
+            coolantSum = 0;
+            coolantCount = 0;
         }
 
         private static bool ValidateStartSessionMeta(StartSessionMeta meta, out string error)
