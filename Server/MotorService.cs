@@ -15,6 +15,41 @@ namespace Server
         private MotorSessionWriter sessionWriter;
         private bool disposed;
 
+        public delegate void TransferStartedHandler(string sessionId, DateTime startTime);
+        public event TransferStartedHandler OnTransferStarted;
+
+        public delegate void SampleReceivedHandler(int sampleCount);
+        public event SampleReceivedHandler OnSampleReceived;
+
+        public delegate void TransferCompletedHandler(string sessionId, int totalSamples);
+        public event TransferCompletedHandler OnTransferCompleted;
+
+        public delegate void WarningRaisedHandler(string message);
+        public event WarningRaisedHandler OnWarningRaised;
+
+        private double? previousIq;
+        private double? previousId;
+        private double iqThreshold;
+        private double idThreshold;
+
+        private double? previousCoolant;
+        private double tThreshold;
+        private double coolantSum;
+        private int coolantCount;
+        private double deviationPercent;
+
+        public delegate void ElectricSpikeQHandler(string direction, double delta);
+        public event ElectricSpikeQHandler OnElectricSpikeQ;
+
+        public delegate void ElectricSpikeDHandler(string direction, double delta);
+        public event ElectricSpikeDHandler OnElectricSpikeD;
+
+        public delegate void TemperatureSpikeHandler(string direction, double delta);
+        public event TemperatureSpikeHandler OnTemperatureSpike;
+
+        public delegate void OutOfBandWarningHandler(string direction, double coolant, double mean);
+        public event OutOfBandWarningHandler OnOutOfBandWarning;
+
         public Ack StartSession(StartSessionMeta meta)
         {
             if (sessionStarted)
@@ -30,10 +65,20 @@ namespace Server
             currentSessionId = string.IsNullOrWhiteSpace(meta.SessionId) ? Guid.NewGuid().ToString("N") : meta.SessionId;
             sampleCount = 0;
 
+            iqThreshold = meta.IqThreshold;
+            idThreshold = meta.IdThreshold;
+            previousIq = null;
+            previousId = null;
+            tThreshold = meta.TThreshold;
+            deviationPercent = meta.DeviationPercent;
+            previousCoolant = null;
+            coolantSum = 0;
+            coolantCount = 0;
             try
             {
                 sessionWriter = new MotorSessionWriter(storageRoot, currentSessionId);
                 sessionStarted = true;
+                OnTransferStarted?.Invoke(currentSessionId, DateTime.UtcNow);
             }
             catch (Exception ex)
             {
@@ -52,17 +97,23 @@ namespace Server
         public Ack PushSample(MotorSample sample)
         {
             if (!sessionStarted)
-            {
                 return new Ack { Success = false, Message = "Session not started", Status = "NACK" };
-            }
 
             if (sessionWriter == null)
-            {
                 return new Ack { Success = false, Message = "Session writer is not available", Status = "NACK" };
-            }
 
             if (!ValidateMotorSample(sample, out string error))
             {
+                try
+                {
+                    if (sample != null)
+                        sessionWriter.WriteReject(sample, error);
+                }
+                catch (Exception ex)
+                {
+                    return new Ack { Success = false, Message = "Write reject error: " + ex.Message, Status = "IN_PROGRESS" };
+                }
+
                 return new Ack { Success = false, Message = error, Status = "IN_PROGRESS" };
             }
 
@@ -70,11 +121,65 @@ namespace Server
             {
                 sessionWriter.WriteSample(sample);
                 sampleCount++;
+                OnSampleReceived?.Invoke(sampleCount);
+                Console.WriteLine("Prenos je u toku... (uzorak " + sampleCount + ")");  
             }
             catch (Exception ex)
             {
                 ReleaseSessionResources();
                 return new Ack { Success = false, Message = "Write error: " + ex.Message, Status = "NACK" };
+            }
+
+            // Analitika 1 - van try bloka, ne može srušiti sesiju
+            if (previousIq.HasValue)
+            {
+                double deltaIq = sample.Iq - previousIq.Value;
+                if (Math.Abs(deltaIq) > iqThreshold)
+                {
+                    string direction = deltaIq > 0 ? "iznad očekivanog" : "ispod očekivanog";
+                    OnElectricSpikeQ?.Invoke(direction, deltaIq);
+                }
+            }
+            previousIq = sample.Iq;
+
+            if (previousId.HasValue)
+            {
+                double deltaId = sample.Id - previousId.Value;
+                if (Math.Abs(deltaId) > idThreshold)
+                {
+                    string direction = deltaId > 0 ? "iznad očekivanog" : "ispod očekivanog";
+                    OnElectricSpikeD?.Invoke(direction, deltaId);
+                }
+            }
+            previousId = sample.Id;
+
+            // Analitika 2 - TemperatureSpike
+            if (previousCoolant.HasValue)
+            {
+                double deltaT = sample.Coolant - previousCoolant.Value;
+                if (Math.Abs(deltaT) > tThreshold)
+                {
+                    string direction = deltaT > 0 ? "iznad očekivanog" : "ispod očekivanog";
+                    OnTemperatureSpike?.Invoke(direction, deltaT);
+                }
+            }
+            previousCoolant = sample.Coolant;
+
+            // Running mean + OutOfBandWarning
+            double coolantMean = coolantCount > 0 ? coolantSum / coolantCount : sample.Coolant;
+            coolantSum += sample.Coolant;
+            coolantCount++;
+
+            double lowerBound = coolantMean * (1.0 - deviationPercent / 100.0);
+            double upperBound = coolantMean * (1.0 + deviationPercent / 100.0);
+
+            if (sample.Coolant < lowerBound)
+            {
+                OnOutOfBandWarning?.Invoke("ispod očekivane vrednosti", sample.Coolant, coolantMean);
+            }
+            else if (sample.Coolant > upperBound)
+            {
+                OnOutOfBandWarning?.Invoke("iznad očekivane vrednosti", sample.Coolant, coolantMean);
             }
 
             return new Ack
@@ -94,6 +199,8 @@ namespace Server
 
             string finishedSessionId = currentSessionId;
             int finishedSampleCount = sampleCount;
+            Console.WriteLine("Prenos je završen.");
+            OnTransferCompleted?.Invoke(finishedSessionId, finishedSampleCount);
             ReleaseSessionResources();
 
             return new Ack
@@ -136,6 +243,11 @@ namespace Server
             sessionStarted = false;
             sampleCount = 0;
             currentSessionId = null;
+            previousIq = null;
+            previousId = null;
+            previousCoolant = null;
+            coolantSum = 0;
+            coolantCount = 0;
         }
 
         private static bool ValidateStartSessionMeta(StartSessionMeta meta, out string error)
