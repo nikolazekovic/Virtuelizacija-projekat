@@ -1,6 +1,0 @@
-C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Common\bin\Debug\Common.dll
-C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Common\bin\Debug\Common.pdb
-C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Common\obj\Debug\Common.csproj.AssemblyReference.cache
-C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Common\obj\Debug\Common.csproj.CoreCompileInputs.cache
-C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Common\obj\Debug\Common.dll
-C:\Users\lelaz\Desktop\Virtuelizacija-projekat-main\Common\obj\Debug\Common.pdb
