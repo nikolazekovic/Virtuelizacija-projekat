@@ -13,32 +13,31 @@ namespace Server
             try
             {
                 service = new MotorService();
-                
-                // Pretplata na događaje
-                service.OnTransferStarted += (sessionId, startTime) => 
-                    Console.WriteLine($"[DOGAĐAJ] Sesija započeta: {sessionId} u {startTime}");
-                
-                service.OnSampleReceived += (count) => 
-                    Console.WriteLine($"[DOGAĐAJ] Primljen uzorak broj: {count}");
-                
-                service.OnTransferCompleted += (sessionId, count) => 
-                    Console.WriteLine($"[DOGAĐAJ] Sesija završena: {sessionId}. Ukupno uzoraka: {count}");
 
-                service.OnWarningRaised += (message) => 
+                service.OnTransferStarted += (sessionId, startTime) =>
+                    Console.WriteLine($"[DOGADJAJ] Sesija zapoceta: {sessionId} u {startTime}");
+
+                service.OnSampleReceived += (count) =>
+                    Console.WriteLine($"[DOGADJAJ] Primljen uzorak broj: {count}");
+
+                service.OnTransferCompleted += (sessionId, count) =>
+                    Console.WriteLine($"[DOGADJAJ] Sesija zavrsena: {sessionId}. Ukupno uzoraka: {count}");
+
+                service.OnWarningRaised += (message) =>
                     Console.WriteLine($"[UPOZORENJE] {message}");
 
-                service.OnElectricSpikeQ += (direction, delta) => 
-                    Console.WriteLine($"[ANALITIKA 1] Upozorenje: Struja Iq je {direction}. Priraštaj: {delta}");
-                
-                service.OnElectricSpikeD += (direction, delta) => 
-                    Console.WriteLine($"[ANALITIKA 1] Upozorenje: Struja Id je {direction}. Priraštaj: {delta}");
+                service.OnElectricSpikeQ += (direction, delta) =>
+                    Console.WriteLine($"[ANALITIKA 1] Upozorenje: Struja Iq je {direction}. Prirastaj: {delta}");
+
+                service.OnElectricSpikeD += (direction, delta) =>
+                    Console.WriteLine($"[ANALITIKA 1] Upozorenje: Struja Id je {direction}. Prirastaj: {delta}");
 
                 service.OnTemperatureSpike += (direction, delta) =>
-                    Console.WriteLine($"[ANALITIKA 2] Temperatura rashladne tečnosti je {direction}. Priraštaj: {delta}");
+                    Console.WriteLine($"[ANALITIKA 2] Temperatura rashladne tecnosti je {direction}. Prirastaj: {delta}");
 
                 service.OnOutOfBandWarning += (direction, coolant, mean) =>
                     Console.WriteLine($"[ANALITIKA 2] Odstupanje od proseka: {direction}. Trenutna vrednost: {coolant:F2}, Prosek: {mean:F2}");
-                
+
                 motorHost = new ServiceHost(service);
                 motorHost.Open();
 

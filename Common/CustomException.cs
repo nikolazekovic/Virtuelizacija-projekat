@@ -7,6 +7,10 @@ namespace Common
     {
         private string message;
 
+        public CustomException()
+        {
+        }
+
         public CustomException(string message)
         {
             Message = message;

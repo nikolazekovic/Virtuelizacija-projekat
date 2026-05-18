@@ -1,0 +1,37 @@
+{
+	"partitions" : [
+		{
+			"name" : "Top",
+			"pins" : [
+				{
+					"name" : "oMOTOR",
+					"strict" : false
+				},
+				{
+					"name" : "oVALVE",
+					"strict" : false
+				},
+				{
+					"name" : "oPUMP",
+					"strict" : false
+				},
+				{
+					"name" : "oDOOR_UNLOCK",
+					"strict" : false
+				},
+				{
+					"name" : "iDOOR_CLOSED",
+					"strict" : false
+				},
+				{
+					"name" : "iCLK",
+					"strict" : false
+				},
+				{
+					"name" : "iRST",
+					"strict" : false
+				}
+			]
+		}
+	]
+}

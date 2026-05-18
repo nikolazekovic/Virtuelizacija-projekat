@@ -61,7 +61,18 @@ namespace Client
                             sample.ProfileId = 9999;
                         }
 
-                        var pushAck = motorClient.PushSample(sample);
+                        Ack pushAck;
+                        try
+                        {
+                            pushAck = motorClient.PushSample(sample);
+                        }
+                        catch (FaultException<CustomException> ex)
+                        {
+                            Console.WriteLine("PushSample fault: " + ex.Detail.Message);
+                            transferFailed = true;
+                            break;
+                        }
+
                         Console.WriteLine("PushSample: " + pushAck.Status + " - " + pushAck.Message);
 
                         if (!pushAck.Success && pushAck.Status == "NACK")

@@ -7,6 +7,7 @@ namespace Server
 {
     public class MotorSessionWriter : IDisposable
     {
+        private const int SimulatedFailureProfileId = 9999;
         private FileStream fileStream;
         private StreamWriter writer;
         
@@ -51,6 +52,11 @@ namespace Server
             if (disposed)
             {
                 throw new ObjectDisposedException("MotorSessionWriter");
+            }
+
+            if (sample.ProfileId == SimulatedFailureProfileId)
+            {
+                throw new IOException("Simulated stream interruption during write.");
             }
 
             writer.WriteLine(string.Join(",",

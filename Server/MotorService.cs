@@ -27,17 +27,6 @@ namespace Server
         public delegate void WarningRaisedHandler(string message);
         public event WarningRaisedHandler OnWarningRaised;
 
-        private double? previousIq;
-        private double? previousId;
-        private double iqThreshold;
-        private double idThreshold;
-
-        private double? previousCoolant;
-        private double tThreshold;
-        private double coolantSum;
-        private int coolantCount;
-        private double deviationPercent;
-
         public delegate void ElectricSpikeQHandler(string direction, double delta);
         public event ElectricSpikeQHandler OnElectricSpikeQ;
 
@@ -50,15 +39,27 @@ namespace Server
         public delegate void OutOfBandWarningHandler(string direction, double coolant, double mean);
         public event OutOfBandWarningHandler OnOutOfBandWarning;
 
+        private double? previousIq;
+        private double? previousId;
+        private double? previousCoolant;
+        private double iqThreshold;
+        private double idThreshold;
+        private double tThreshold;
+        private double coolantSum;
+        private int coolantCount;
+        private double deviationPercent;
+
         public Ack StartSession(StartSessionMeta meta)
         {
             if (sessionStarted)
             {
+                OnWarningRaised?.Invoke("Session already started");
                 return new Ack { Success = false, Message = "Session already started", Status = "NACK" };
             }
 
             if (!ValidateStartSessionMeta(meta, out string error))
             {
+                OnWarningRaised?.Invoke(error);
                 return new Ack { Success = false, Message = error, Status = "NACK" };
             }
 
@@ -67,13 +68,15 @@ namespace Server
 
             iqThreshold = meta.IqThreshold;
             idThreshold = meta.IdThreshold;
-            previousIq = null;
-            previousId = null;
             tThreshold = meta.TThreshold;
             deviationPercent = meta.DeviationPercent;
+
+            previousIq = null;
+            previousId = null;
             previousCoolant = null;
             coolantSum = 0;
             coolantCount = 0;
+
             try
             {
                 sessionWriter = new MotorSessionWriter(storageRoot, currentSessionId);
@@ -83,7 +86,7 @@ namespace Server
             catch (Exception ex)
             {
                 ReleaseSessionResources();
-                return new Ack { Success = false, Message = "Unable to open session resources: " + ex.Message, Status = "NACK" };
+                throw CreateFault("Unable to open session resources: " + ex.Message);
             }
 
             return new Ack
@@ -97,23 +100,33 @@ namespace Server
         public Ack PushSample(MotorSample sample)
         {
             if (!sessionStarted)
+            {
+                OnWarningRaised?.Invoke("Session not started");
                 return new Ack { Success = false, Message = "Session not started", Status = "NACK" };
+            }
 
             if (sessionWriter == null)
+            {
+                OnWarningRaised?.Invoke("Session writer is not available");
                 return new Ack { Success = false, Message = "Session writer is not available", Status = "NACK" };
+            }
 
             if (!ValidateMotorSample(sample, out string error))
             {
                 try
                 {
                     if (sample != null)
+                    {
                         sessionWriter.WriteReject(sample, error);
+                    }
                 }
                 catch (Exception ex)
                 {
+                    OnWarningRaised?.Invoke("Write reject error: " + ex.Message);
                     return new Ack { Success = false, Message = "Write reject error: " + ex.Message, Status = "IN_PROGRESS" };
                 }
 
+                OnWarningRaised?.Invoke(error);
                 return new Ack { Success = false, Message = error, Status = "IN_PROGRESS" };
             }
 
@@ -122,21 +135,21 @@ namespace Server
                 sessionWriter.WriteSample(sample);
                 sampleCount++;
                 OnSampleReceived?.Invoke(sampleCount);
-                Console.WriteLine("Prenos je u toku... (uzorak " + sampleCount + ")");  
+                Console.WriteLine("Prenos je u toku... (uzorak " + sampleCount + ")");
             }
             catch (Exception ex)
             {
+                OnWarningRaised?.Invoke("Write error: " + ex.Message);
                 ReleaseSessionResources();
-                return new Ack { Success = false, Message = "Write error: " + ex.Message, Status = "NACK" };
+                throw CreateFault("Write error: " + ex.Message);
             }
 
-            // Analitika 1 - van try bloka, ne može srušiti sesiju
             if (previousIq.HasValue)
             {
                 double deltaIq = sample.Iq - previousIq.Value;
                 if (Math.Abs(deltaIq) > iqThreshold)
                 {
-                    string direction = deltaIq > 0 ? "iznad očekivanog" : "ispod očekivanog";
+                    string direction = deltaIq > 0 ? "iznad ocekivanog" : "ispod ocekivanog";
                     OnElectricSpikeQ?.Invoke(direction, deltaIq);
                 }
             }
@@ -147,25 +160,23 @@ namespace Server
                 double deltaId = sample.Id - previousId.Value;
                 if (Math.Abs(deltaId) > idThreshold)
                 {
-                    string direction = deltaId > 0 ? "iznad očekivanog" : "ispod očekivanog";
+                    string direction = deltaId > 0 ? "iznad ocekivanog" : "ispod ocekivanog";
                     OnElectricSpikeD?.Invoke(direction, deltaId);
                 }
             }
             previousId = sample.Id;
 
-            // Analitika 2 - TemperatureSpike
             if (previousCoolant.HasValue)
             {
                 double deltaT = sample.Coolant - previousCoolant.Value;
                 if (Math.Abs(deltaT) > tThreshold)
                 {
-                    string direction = deltaT > 0 ? "iznad očekivanog" : "ispod očekivanog";
+                    string direction = deltaT > 0 ? "iznad ocekivanog" : "ispod ocekivanog";
                     OnTemperatureSpike?.Invoke(direction, deltaT);
                 }
             }
             previousCoolant = sample.Coolant;
 
-            // Running mean + OutOfBandWarning
             double coolantMean = coolantCount > 0 ? coolantSum / coolantCount : sample.Coolant;
             coolantSum += sample.Coolant;
             coolantCount++;
@@ -175,11 +186,11 @@ namespace Server
 
             if (sample.Coolant < lowerBound)
             {
-                OnOutOfBandWarning?.Invoke("ispod očekivane vrednosti", sample.Coolant, coolantMean);
+                OnOutOfBandWarning?.Invoke("ispod ocekivane vrednosti", sample.Coolant, coolantMean);
             }
             else if (sample.Coolant > upperBound)
             {
-                OnOutOfBandWarning?.Invoke("iznad očekivane vrednosti", sample.Coolant, coolantMean);
+                OnOutOfBandWarning?.Invoke("iznad ocekivane vrednosti", sample.Coolant, coolantMean);
             }
 
             return new Ack
@@ -194,12 +205,14 @@ namespace Server
         {
             if (!sessionStarted)
             {
+                OnWarningRaised?.Invoke("No active session");
                 return new Ack { Success = false, Message = "No active session", Status = "NACK" };
             }
 
             string finishedSessionId = currentSessionId;
             int finishedSampleCount = sampleCount;
-            Console.WriteLine("Prenos je završen.");
+
+            Console.WriteLine("Prenos je zavrsen.");
             OnTransferCompleted?.Invoke(finishedSessionId, finishedSampleCount);
             ReleaseSessionResources();
 
@@ -346,6 +359,13 @@ namespace Server
             }
 
             return true;
+        }
+
+        private static FaultException<CustomException> CreateFault(string message)
+        {
+            return new FaultException<CustomException>(
+                new CustomException(message),
+                new FaultReason(message));
         }
     }
 }
